@@ -1,0 +1,48 @@
+name: Import birthday website
+on:
+  push:
+    branches: [main]
+    paths: ['import/ready.sha256']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: birthday-source-import
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Restore and verify the prepared HTML
+        run: |
+          python3 - <<'PY'
+          import base64, gzip, hashlib
+          from pathlib import Path
+          marker = Path('import/ready.sha256')
+          if not marker.exists():
+              raise SystemExit('The import package is not complete yet.')
+          parts = sorted(Path('import').glob('site.part*.b64'))
+          encoded = ''.join(p.read_text().strip() for p in parts)
+          html = gzip.decompress(base64.b64decode(encoded, validate=True))
+          expected = marker.read_text().strip()
+          actual = hashlib.sha256(html).hexdigest()
+          if actual != expected:
+              raise SystemExit(f'Checksum mismatch: {actual}')
+          if not html.startswith(b'<!DOCTYPE html>'):
+              raise SystemExit('The imported file is not the expected HTML.')
+          Path('index.html').write_bytes(html)
+          Path('.nojekyll').touch()
+          for p in parts:
+              p.unlink()
+          marker.unlink()
+          Path('import').rmdir()
+          print('Verified index.html:', actual)
+          PY
+      - name: Commit the ready-to-deploy website
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .nojekyll import
+          git commit -m "Add verified HTML birthday website ready for GitHub Pages"
+          git push origin HEAD:main
