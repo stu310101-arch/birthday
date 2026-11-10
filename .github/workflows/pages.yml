@@ -56,6 +56,47 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+      - name: Verify public URLs return HTTP 200 and the correct website
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+          import time
+          from urllib.error import HTTPError, URLError
+          from urllib.request import Request, urlopen
+
+          base = os.environ['PAGE_URL'].rstrip('/') + '/'
+          sha = os.environ['GITHUB_SHA']
+          results = []
+          for route, source in [('', 'index.html'), ('setup.html', 'setup.html')]:
+              expected = hashlib.sha256(Path(source).read_bytes()).hexdigest()
+              for attempt in range(12):
+                  url = base + route + '?verify=' + sha + '-' + str(attempt)
+                  request = Request(url, headers={'Cache-Control': 'no-cache', 'User-Agent': 'Birthday-Pages-Verification'})
+                  try:
+                      with urlopen(request, timeout=15) as response:
+                          status = response.status
+                          content = response.read()
+                      actual = hashlib.sha256(content).hexdigest()
+                      if status != 200 or actual != expected:
+                          raise ValueError('Website has not served the expected HTML yet')
+                      result = f'PASS: {base + route} — HTTP 200; SHA-256 matches {source}: {actual}'
+                      print(result, flush=True)
+                      results.append(result)
+                      break
+                  except (HTTPError, URLError, TimeoutError, OSError, ValueError) as error:
+                      print(f'Public URL check {attempt + 1}/12 for {source}: {error}', flush=True)
+                      if attempt == 11:
+                          raise SystemExit(f'Failed to verify {base + route}')
+                      time.sleep(5)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
+              summary.write('## Live website verified\n\n' + '\n\n'.join(results) + '\n')
+          PY
+
       - name: Record live website address
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
