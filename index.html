@@ -459,7 +459,7 @@ $('blowButton').addEventListener('click',()=>{
   if(!state.finished||!state.wishesConfirmed||state.chatOpen)return;
   if(state.blown){music.start('birthday',true);celebrate();return;}
   state.blown=true;phase('celebrating');$('cakeArt').classList.add('is-blown');$('cakeArt').setAttribute('aria-label','十八歲巧克力蛋糕，數字 18 蠟燭已吹熄');
-  $('cakeEyebrow').textContent='YOUR NEXT CHAPTER BEGINS';$('cakeTitle').textContent='18 歲生日快樂！';$('cakeCaption').textContent='願我們在頂峰相見';$('blowLabel').textContent='再聽一次生日歌';$('resetButton').hidden=false;
+  $('cakeEyebrow').textContent='YOUR NEXT CHAPTER BEGINS';$('cakeTitle').textContent='願我們在頂峰相見!';$('cakeCaption').textContent='';$('cakeCaption').hidden=true;$('blowLabel').textContent='再聽一次生日歌';$('resetButton').hidden=false;
   music.blow();music.start('birthday',true);celebrate();
 });
 $('resetButton').addEventListener('click',()=>{
