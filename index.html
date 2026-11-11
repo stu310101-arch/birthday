@@ -134,7 +134,7 @@ body:not([data-phase="closed"]) .room-image{transform:translateY(4%) scale(1.22)
     <div class="open-control" id="openControl"><button class="open-button" id="openButton" type="button"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="3" y="3" width="14" height="10" rx="1.5"/><path d="m3 13-2 3h18l-2-3M8 16h4" stroke-linejoin="round"/></svg><span>打開這份驚喜</span><span aria-hidden="true">↗</span></button><span class="open-hint">點一下，讓故事慢慢開始</span></div>
   </div>
 </main>
-<footer><div class="footer-note left">今天，慢一點也沒關係。</div><div class="journey" aria-label="生日驚喜進度"><div class="journey-step current" id="step1" aria-current="step"><span class="step-number">01</span><span>打開驚喜</span></div><span class="journey-line" aria-hidden="true"></span><div class="journey-step" id="step2"><span class="step-number">02</span><span>收下心意</span></div><span class="journey-line" aria-hidden="true"></span><div class="journey-step" id="step3"><span class="step-number">03</span><span>許個願望</span></div></div><div class="footer-note right">MADE WITH A LITTLE LOVE ♡</div></footer>
+<footer><div class="footer-note right">MADE WITH A LITTLE LOVE ♡</div></footer>
 <canvas class="confetti" id="confetti" aria-hidden="true"></canvas><div class="toast" id="toast" role="status" hidden></div>
 <noscript><div class="noscript">這份生日驚喜需要啟用 JavaScript，才能打開電腦、收看訊息與播放音樂。<br>請使用一般瀏覽器開啟這份 HTML。</div></noscript>
 <script>
@@ -185,7 +185,7 @@ for (let i=0; i<rows.length; i++) {
   $('keyboard').append(row);
 }
 function phase(value){state.phase=value;document.body.dataset.phase=value;}
-function setStep(n){for(let i=1;i<=3;i++){const el=$('step'+i);el.classList.toggle('current',i===n);el.classList.toggle('done',i<n);if(i===n)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');}}
+
 let toastTimer;
 function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,5000);}
 function scrollChat(){requestAnimationFrame(()=>$('chatLog').scrollTo({top:$('chatLog').scrollHeight,behavior:reduceMotion?'instant':'smooth'}));}
@@ -364,7 +364,7 @@ $('openButton').addEventListener('click',async()=>{
 function openChat(){
   if(!state.started)return;
   state.chatOpen=true;phase(state.finished?'reply':'chat');$('chatWindow').hidden=false;$('chatDock').classList.add('active');$('cakeDock').classList.remove('active');
-  setStep(2);$('chatTitle').focus({preventScroll:true});scrollChat();
+  $('chatTitle').focus({preventScroll:true});scrollChat();
 }
 async function deliverMessages(){
   const messages=CONFIG.messages.map(value=>String(value));
@@ -384,7 +384,7 @@ async function deliverMessages(){
   updateSendButton();scrollChat();
 }
 function closeChat(){
-  if(!state.finished)return;state.chatOpen=false;$('chatWindow').hidden=true;phase(state.blown?'celebrating':'desktop');setStep(3);
+  if(!state.finished)return;state.chatOpen=false;$('chatWindow').hidden=true;phase(state.blown?'celebrating':'desktop');
   $('chatDock').classList.remove('active');$('cakeDock').classList.add('active');$('blowButton').focus({preventScroll:true});
 }
 $('closeChat').addEventListener('click',closeChat);$('cakeDock').addEventListener('click',closeChat);$('chatDock').addEventListener('click',openChat);
