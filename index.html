@@ -49,6 +49,47 @@ body:not([data-phase="closed"]) .room-image{transform:translateY(4%) scale(1.22)
   .hero h1{font-size:clamp(24px,3.1vw,36px);line-height:1.4}
   .hero h1 .birthday-name{margin-top:6px}
 }
+
+/* Let readers stay on old messages and catch up only when they want to. */
+.catch-up{position:absolute;right:14px;bottom:81px;z-index:8;padding:8px 12px;border-radius:999px;background:#946a50;color:#fffaf2;border:1px solid #fff4e5b3;box-shadow:0 5px 14px #4a332e3b;font-size:11px;letter-spacing:.4px;line-height:1.3}
+.catch-up:hover{background:#774e3a}
+@media (max-width:600px){
+  html,body{height:var(--mobile-vh,100dvh);min-height:0;max-height:var(--mobile-vh,100dvh);overscroll-behavior:none}
+  .stage{height:var(--mobile-vh,100dvh)}
+  .hero{top:clamp(86px,18%,160px);left:4%;right:4%}
+  .hero h1{font-size:clamp(18px,5.6vw,27px);line-height:1.5}
+  .hero h1 .birthday-date,.hero h1 .birthday-name{white-space:normal;overflow-wrap:anywhere}
+  body:not([data-phase="closed"]) .machine{--device-w:calc(100vw - 12px);top:calc(var(--mobile-vh,100dvh) - 28px)}
+  body:not([data-phase="closed"]) .lid{height:clamp(255px,calc(var(--mobile-vh,100dvh) - 94px),900px)}
+  .display{inset:12px 6px 14px}
+  .chat-window{top:33px;bottom:7px;left:6px;right:6px;border-radius:10px}
+  .chat-header{min-height:48px;padding:8px 10px;gap:8px}
+  .avatar{height:29px;width:29px;border-radius:9px}
+  .chat-person h2{font-size:12px}
+  .chat-log{padding:10px 10px 12px;scroll-behavior:auto;overscroll-behavior:contain}
+  .message-row.incoming{flex-direction:column;align-items:flex-start;gap:3px}
+  .message-row.outgoing{flex-direction:column;align-items:flex-end;gap:3px}
+  .bubble{max-width:100%;font-size:13px;line-height:1.6;padding:8px 11px}
+  .bubble-time{font-size:9px;line-height:1.3}
+  .composer{padding:6px 8px 7px}
+  .reply-field{height:38px;min-height:38px}
+  .send-button{height:38px}
+  .desktop{top:26px}
+  .cake-panel{height:calc(100% - 50px);padding:6px 8px}
+  .cake-title{font-size:clamp(17px,4.5vw,22px);line-height:1.35}
+  .cake-art{height:clamp(140px,25dvh,270px);min-height:0;width:min(95%,310px);margin:3px 0;flex-shrink:1}
+  .cake-caption{margin-top:5px;line-height:1.5}
+  .wish-button{min-height:36px;padding:8px 16px}
+  .desktop-dock{bottom:3px;transform:translateX(-50%) scale(.88);transform-origin:center bottom}
+  .catch-up{right:11px;bottom:62px;font-size:11px;padding:8px 10px}
+}
+@media (max-width:360px),(max-width:600px) and (max-height:680px){
+  .cake-art{height:clamp(110px,22dvh,185px)}
+  .chat-window{top:30px;bottom:6px}
+  .chat-header{min-height:44px}
+  .composer{padding:5px 7px 5px}
+  .privacy-line{font-size:7px;margin-top:3px}
+}
 </style>
 </head>
 <body data-phase="closed">
@@ -126,6 +167,7 @@ body:not([data-phase="closed"]) .room-image{transform:translateY(4%) scale(1.22)
             <section class="chat-window" id="chatWindow" role="dialog" aria-labelledby="chatTitle" hidden>
               <header class="chat-header"><span class="avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2c0 6-4 10-10 10 6 0 10 4 10 10 0-6 4-10 10-10-6 0-10-4-10-10Z" stroke-width="1.5"/></svg></span><div class="chat-person"><h2 id="chatTitle" tabindex="-1">一個想祝福你的人</h2><div class="online-line"><span class="online-dot"></span><span id="chatStatus">正在輸入…</span></div></div><button class="close-chat" id="closeChat" type="button" aria-label="關閉聊天，回到桌面" title="回到桌面" hidden><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 4 8 8M12 4l-8 8"/></svg></button></header>
               <div class="chat-log" id="chatLog" role="log" aria-label="生日訊息" aria-live="polite" aria-relevant="additions text" aria-atomic="false"><div class="typing" id="typing" aria-label="對方正在輸入"><span></span><span></span><span></span></div></div>
+              <button class="catch-up" id="catchUp" type="button" hidden aria-label="捲動至最新訊息">↓ 回到最新訊息</button>
               <form class="composer" id="replyForm" method="POST" action="https://formsubmit.co/stu310101@shsh.tw"><div class="composer-row"><label class="sr-only" for="replyInput">你的回覆</label><textarea class="reply-field" id="replyInput" name="message" rows="1" maxlength="2000" placeholder="等我把話說完，再換你說 ♡" disabled></textarea><button class="send-button" id="sendButton" type="submit" disabled aria-label="寄出回覆" title="寄出回覆"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m3 3 18 9-18 9 4-9-4-9ZM7 12h14" stroke-linejoin="round"/></svg></button></div><div class="honeypot" aria-hidden="true"><label>請留空<input name="_honey" id="honey" tabindex="-1" autocomplete="off"></label></div><div class="mail-status" id="mailStatus" role="status" aria-live="polite" hidden></div></form>
             </section>
           </div>
@@ -189,7 +231,50 @@ function phase(value){state.phase=value;document.body.dataset.phase=value;}
 
 let toastTimer;
 function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,5000);}
-function scrollChat(){requestAnimationFrame(()=>$('chatLog').scrollTo({top:$('chatLog').scrollHeight,behavior:reduceMotion?'instant':'smooth'}));}
+// 新訊息不打斷正在閱讀較早訊息的讀者；只在靠近最下方時跟隨。
+const chatLogEl=$('chatLog');
+let followChat=true;
+let autoScrollPending=false;
+function isNearChatBottom(){
+  return chatLogEl.scrollHeight-chatLogEl.scrollTop-chatLogEl.clientHeight<=55;
+}
+function showCatchUp(){
+  $('catchUp').hidden=followChat;
+}
+chatLogEl.addEventListener('scroll',()=>{
+  if(autoScrollPending)return;
+  followChat=isNearChatBottom();
+  showCatchUp();
+},{passive:true});
+chatLogEl.addEventListener('wheel',event=>{
+  if(event.deltaY<0){followChat=false;showCatchUp();}
+},{passive:true});
+chatLogEl.addEventListener('touchmove',()=>{
+  if(!autoScrollPending&&!isNearChatBottom()){followChat=false;showCatchUp();}
+},{passive:true});
+function scrollChat(force=false){
+  if(!force&&!followChat){showCatchUp();return;}
+  requestAnimationFrame(()=>{
+    if(!force&&!followChat)return;
+    autoScrollPending=true;
+    chatLogEl.scrollTop=chatLogEl.scrollHeight;
+    followChat=true;showCatchUp();
+    requestAnimationFrame(()=>{autoScrollPending=false;});
+  });
+}
+$('catchUp').addEventListener('click',()=>{followChat=true;scrollChat(true);});
+// 使用手機可視視窗高度，避免開啟鍵盤後輸入框被瀏覽器工具列遮住。
+function syncMobileViewport(){
+  const viewport=window.visualViewport;
+  if(window.innerWidth<=600&&viewport&&viewport.height>240){
+    document.documentElement.style.setProperty('--mobile-vh',Math.round(viewport.height)+'px');
+  }else{
+    document.documentElement.style.removeProperty('--mobile-vh');
+  }
+}
+window.addEventListener('resize',syncMobileViewport,{passive:true});
+if(window.visualViewport)window.visualViewport.addEventListener('resize',syncMobileViewport,{passive:true});
+syncMobileViewport();
 
 // 音樂盒：Web Audio 即時合成，無 MP3、CDN 或音樂外連。
 // 前奏為自編輕快旋律；吹熄後切換 Happy Birthday 的器樂旋律。
@@ -403,7 +488,13 @@ async function deliverMessages(){
     const row=document.createElement('div');row.className='message-row incoming';
     const bubble=document.createElement('div');bubble.className='bubble';bubble.textContent=messages[i];
     const time=document.createElement('span');time.className='bubble-time';time.textContent=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false});
-    row.append(bubble,time);$('chatLog').insertBefore(row,$('typing'));music.ping();scrollChat();
+    row.append(bubble,time);$('chatLog').insertBefore(row,$('typing'));music.ping();
+    // 長訊息先讓使用者從開頭閱讀，不強制跳到泡泡最下方。
+    if(row.getBoundingClientRect().height>chatLogEl.clientHeight*.72){
+      followChat=false;showCatchUp();
+    }else{
+      scrollChat();
+    }
     if(messages[i]===CONFIG.countdownAfterMessage)await showFinalCountdown();
   }
   $('typing').hidden=true;state.finished=true;phase('reply');$('chatStatus').textContent='';$('chatStatus').parentElement.hidden=true;$('chatTitle').style.marginBottom='0';
