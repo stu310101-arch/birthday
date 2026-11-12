@@ -190,7 +190,7 @@ body:not([data-phase="closed"]) .room-image{transform:translateY(4%) scale(1.22)
             <div class="wallpaper" aria-hidden="true"></div>
             <div class="boot" id="boot" aria-hidden="true"><div class="boot-symbol"><svg viewBox="0 0 48 48" fill="none"><path d="M24 39 8 24C-2 14 11 1 21 11l3 3 3-3C37 1 50 14 40 24Z" fill="currentColor"/></svg></div><div class="boot-line"></div></div>
             <div class="menubar" aria-hidden="true"><div class="menu-left"><svg class="menu-logo" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20 3.5 12C-1 7.5 5 1 10 6l2 2 2-2c5-5 11 1.5 6.5 6Z"/></svg><strong>Birthday</strong><span class="menu-extra">檔案</span><span class="menu-extra">心意</span><span class="menu-extra">願望</span></div><div class="menu-right"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 7a13 13 0 0 1 16 0M5 10a8 8 0 0 1 10 0M8 13a3 3 0 0 1 4 0"/><circle cx="10" cy="16" r=".8" fill="currentColor"/></svg><span class="battery"></span><span id="clock">18:00</span></div></div>
-            <section class="desktop" aria-label="生日電腦桌面">
+            <section class="desktop" id="desktop" aria-label="生日電腦桌面" hidden>
               <div class="cake-panel">
                 <p class="cake-eyebrow" id="cakeEyebrow">MAKE A LITTLE WISH</p>
                 <h2 class="cake-title" id="cakeTitle">請許下三個願望</h2>
@@ -614,7 +614,10 @@ window.addEventListener('resize',()=>{if(state.readerOpen&&window.innerWidth>600
 function closeChat(){
   if(!state.finished)return;
   if(state.readerOpen)exitReader(false);
-  state.chatOpen=false;$('expandChatButton').hidden=true;$('chatWindow').hidden=true;phase(state.blown?'celebrating':'desktop');
+  state.chatOpen=false;$('expandChatButton').hidden=true;$('chatWindow').hidden=true;
+  // 只有讀完所有訊息並關閉聊天，才第一次揭露桌面的蛋糕。
+  $('desktop').hidden=false;
+  phase(state.blown?'celebrating':'desktop');
   $('chatDock').classList.remove('active');$('cakeDock').classList.add('active');$(state.wishesConfirmed?'blowButton':'confirmWishes').focus({preventScroll:true});
 }
 $('closeChat').addEventListener('click',closeChat);$('cakeDock').addEventListener('click',closeChat);$('chatDock').addEventListener('click',openChat);
